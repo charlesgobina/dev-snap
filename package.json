@@ -8,6 +8,7 @@
     "devsnap": "./index.js"
   },
   "scripts": {
+    "start": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,9 +27,11 @@
   "homepage": "https://github.com/charlesgobina/dev-snap#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
     "inquirer": "^12.3.0",
     "joi": "^17.13.3",
+    "nodemon": "^3.1.9",
     "uuid": "^11.0.5",
     "yargs": "^17.7.2"
   }

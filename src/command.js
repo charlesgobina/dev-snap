@@ -44,7 +44,7 @@ yargs(hideBin(process.argv))
           message: "Enter your company name",
         });
 
-        console.log(typeof(email), typeof(password), companyName);
+        console.log(email, password, companyName);
         
         let customToken = await DevAuth.DeveloperSignup(email, password, companyName);
         console.log('Custom token:', customToken);
