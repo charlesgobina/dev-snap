@@ -1,8 +1,9 @@
 import DeveloperModel from "../../model/developerModel.js";
 import DeveloperService from "../../services/developerService.js";
-// import { writeToFirestire } from "../../utils/firestireHelper";
+import { verifyPassword } from "../../utils/passwordHashing.js";
 import { fbAdmin } from "../../config/config.js";
 import { hashPassword } from "../../utils/passwordHashing.js";
+import { createJWT } from "../../utils/jwt.js";
 import { auth } from "../../config/config.js";
 import * as uuid from 'uuid'
 import { trimmer, validateEmail, validatePassword } from "../../utils/emailAndPasswordValidationHelper.js";
@@ -11,31 +12,35 @@ import { trimmer, validateEmail, validatePassword } from "../../utils/emailAndPa
 
 class DevAuth {
 
-  static async createUser(email, password) {
-    validateEmail(trimmer(email))
-    validatePassword(trimmer(password))
+  // for express
+  static async signup(req, res) {
+    const developerId = uuid.v4()
+    const { email, password, companyName } = req.body
+    validateEmail(email)
+    validatePassword(password)
     try {
-      const userProperties = {
+      // create developer account
+      const user = await fbAdmin.auth().createUser({
+        uid: developerId,
         email: email,
         password: password,
-        emailVerified: false,
+        emailVerified: false
+      })
+
+      // save developer data to firestore
+      if (user.uid != null) {
+
+        // hash password
+        const hashedPassword = hashPassword(password)
+        const developerData = new DeveloperModel(developerId, email, hashedPassword, companyName)
+        DeveloperService.saveDeveloperData(developerId, developerData.toJSON())
       }
 
-      await fbAdmin.auth().createUser(userProperties)
-      console.log('User created successfully')
-    } catch (error) {
-      console.log('Error creating user:', error.message)
-      return error.message
-    }
-  }
+      // generate jwt token
+      const token = createJWT(user)
 
-  // for express
-  static async login(req, res) {
-    const { email, password } = req.body
-    try {
-      const user = await this.createUser(email, password)
       console.log(user)
-      res.send('Login successful')
+      res.status(201).json({ token: token })
     }
     catch (error) {
       console.log(error)
@@ -45,22 +50,21 @@ class DevAuth {
 
   
 
-  static async DeveloperSignup (email, password, companyname) {
+  static async login(req, res) {
+    const { email, password } = req.body
     try {
-      const developerId = uuid.v4()
-      const passwordHash = hashPassword(password)
-      const devData = new DeveloperModel(email, passwordHash, companyname)
-
-      //check if developer already exists
-      
-      // create developer account
-      await this.createUser(developerId, "charles.gobina@gmail.com", password)
-      DeveloperService.saveDeveloperData(developerId, devData.toJSON());
-      await this.createUser(email, password)
-      console.log(error)
+      const user = await DeveloperService.getDeveloperByEmail(email)
+      const newDeveloper = new DeveloperModel(user.id, user.email, user.password.hashedPassword, user.companyName)
+      // compare password
+      if (!verifyPassword(password, newDeveloper.password, user.password.salt)) {
+        res.status(401).json({ message: 'Invalid email or password' })
+        return
+      }
+      await DeveloperService.updateDevReadyStatus(newDeveloper.id, true)
+      res.status(200).json({ message: 'Login successful' })
     } catch (error) {
       console.log(error)
-      return error
+      res.send(error.message)
     }
   }
 
