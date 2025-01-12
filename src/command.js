@@ -1,12 +1,13 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DevAuth } from "../controller/developer/developerAuth.js";
+import DevSnapInit from "../controller/snaps/init.js";
 import inquirer from 'inquirer'
 
 yargs(hideBin(process.argv))
   .command(
-    "login",
-    "log into devsnap",
+    "init",
+    "Prepare the project for DevSnap",
     (yargs) => {
       // yargs.option("env", {
       //   alias: "e",
@@ -22,35 +23,11 @@ yargs(hideBin(process.argv))
       // });
     },
     async (argv) => {
-
       try {
-        // Prompt for email
-        const { email } = await inquirer.prompt({
-          type: "input",
-          name: "email",
-          message: "Enter your email",
-        });
-
-        // Prompt for password
-        const { password } = await inquirer.prompt({
-          type: "password",
-          name: "password",
-          message: "Enter your password",
-        });
-
-        const { companyName } = await inquirer.prompt({
-          type: "input",
-          name: "companyName",
-          message: "Enter your company name",
-        });
-
-        console.log(email, password, companyName);
-        
-        let customToken = await DevAuth.DeveloperSignup(email, password, companyName);
-        console.log('Custom token:', customToken);
-      
+        DevSnapInit.init();
       } catch (error) {
-        console.error("Error:", error.message);
+        console.error("Error:", error.message);  // setup project to detect production environment
+        // and show appropriate error messages based on the environment
       }
     }
   )
