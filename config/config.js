@@ -10,5 +10,6 @@ fbAdmin.initializeApp({
 
 const db = fbAdmin.firestore();
 const auth = fbAdmin.auth();
+const bucket = fbAdmin.storage().bucket();
 
-export { db, auth, fbAdmin };
+export { db, auth, fbAdmin, bucket };

@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/charlesgobina/dev-snap#readme",
   "dependencies": {
+    "archiver": "^7.0.1",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
