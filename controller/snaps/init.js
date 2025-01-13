@@ -34,10 +34,16 @@ class DevSnapInit {
     // Scan project directory
     console.log('Creating baseline snapshot...');
     const metadata = scanDirectory(process.cwd());
-    console.log('Files scanned:', Object.keys(metadata).length);
+
+    const currentMetadata = {
+      isFirstSnapshot: true,
+      files: metadata,
+    };
+
+    console.log('Files scanned:', Object.keys(currentMetadata.files).length);
 
     // Save metadata to file
-    fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+    fs.writeFileSync(METADATA_FILE, JSON.stringify(currentMetadata, null, 2));
     console.log(`Metadata saved to ${METADATA_FILE}`);
 
     console.log('DevSnap initialized successfully!');
