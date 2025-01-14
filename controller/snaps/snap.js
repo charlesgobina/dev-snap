@@ -6,6 +6,7 @@ import {
   scanDirectory,
   getChangedFiles,
   createArchive,
+  uploadAndGenerateSignedUrl,
 } from "../../utils/fileManipulationHelper.js";
 
 // Directory for DevSnap metadata
@@ -86,15 +87,36 @@ class DevSnap {
 
     console.log("Snapshot process completed.");
   }
+
+  async uploadFile(req, res) {
+
+    try {
+      console.log(req.body);
+      const { file } = req.body;
+      console.log(file);
+      const { userId } = "174fb4ae-0aae-4e15-a441-d03c6f0fd0f6";
+      
+
+      await uploadAndGenerateSignedUrl(file, userId)
+
+    } catch (e) {}
+    
+
+      res.status(200).json({ message: "File uploaded successfully" });
+
+  }
+
 }
 
-let devSnap = new DevSnap();
-devSnap
-  .snap()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Error:", error.message);
-    process.exit(1);
-  });
+// let devSnap = new DevSnap();
+// devSnap
+//   .snap()
+//   .then(() => {
+//     process.exit(0);
+//   })
+//   .catch((error) => {
+//     console.error("Error:", error.message);
+//     process.exit(1);
+//   });
+
+export default DevSnap;
