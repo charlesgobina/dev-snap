@@ -1,4 +1,4 @@
-import { db } from "../config/config.js";
+import { db } from "../config/adminConfig.js";
 
 class DeveloperService {
   static developerCollection = "developers";
