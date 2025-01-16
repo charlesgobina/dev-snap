@@ -9,6 +9,7 @@ class SnapModel {
     this.workspaceArchive = "";
     this.dependencyInfo = {};
     this.configFiles = {};
+    this.frameTime = ""
     this.snapSize = 0;
     this.isLocked = false;
   }
@@ -21,6 +22,7 @@ class SnapModel {
       workspaceArchive: this.workspaceArchive,
       dependencyInfo: this.dependencyInfo,
       configFiles: this.configFiles,
+      frameTime: this.frameTime,
       snapSize: this.snapSize,
       isLocked: this.isLocked,
     };
@@ -34,6 +36,7 @@ class SnapModel {
       workspaceArchive: Joi.string().required(),
       dependencyInfo: Joi.object().required(),
       configFiles: Joi.object().required(),
+      frameTime: Joi.object().required(),
       snapSize: Joi.number().required(),
       isLocked: Joi.boolean().required(),
     });
@@ -47,6 +50,7 @@ class SnapModel {
       workspaceArchive: Joi.string(),
       dependencyInfo: Joi.object(),
       configFiles: Joi.object(),
+      frameTime: Joi.string(),
       snapSize: Joi.number(),
       isLocked: Joi.boolean(),
     });

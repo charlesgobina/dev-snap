@@ -5,7 +5,7 @@ DevSnap is a developer-focused CLI tool designed to capture and reproduce entire
 ## Features
 
 - **Workspace Archiving**: Snap the entire workspace, including files and folder structure, into a compressed archive.
-- **Dependency Management**: Capture and restore language-specific dependencies (e.g., Node.js, Python).
+- **Dependency Management**: Capture and restore language-specific dependencies (e.g., Node.js).
 - **Configuration Snapshots**: Save and apply environment configurations, such as `.bashrc`, `.gitconfig`, and `.env` files.
 - **Cross-Platform Compatibility**: Works across different operating systems while ensuring portability.
 - **Exclusion Support**: Use a `.snapignore` file to exclude unnecessary files and directories.
@@ -37,8 +37,8 @@ Create a snapshot of your current workspace:
 devsnap snap
 ```
 This command will:
-1. Archive the workspace files into a compressed file (e.g., `myproject.tar.gz`).
-2. Generate a `devsnap.json` file with dependency and configuration details.
+1. Archive the workspace files into a compressed file (e.g., `snapshot-<timestamp>.zip`).
+2. Generate a `metadata.json` file with dependency and configuration details.
 
 #### Options
 - `--directory <path>`: Specify the workspace directory (default: current directory).
@@ -65,14 +65,14 @@ This command will:
 ```bash
 cd myproject
 
-devsnap snap --directory ./ --output myproject.tar.gz
+devsnap snap --directory ./ --output snapshot-<timestamp>.zip
 ```
 
 #### Restore the Workspace on Another System
 ```bash
 cd ~/workspaces
 
-devsnap restore --archive ~/downloads/myproject.tar.gz --target ./myproject
+devsnap restore --archive ~/downloads/snapshot-<timestamp>.zip --target ./myproject
 ```
 
 ## Configuration
@@ -85,21 +85,17 @@ node_modules
 .env
 ```
 
-### `devsnap.json`
+### `metadata.json`
 A file automatically generated during the `snap` process. Example:
 ```json
 {
-  "workspace": {
-    "archive": "myproject.tar.gz",
-    "exclude": [".git", "node_modules"]
-  },
-  "dependencies": {
-    "node": ["express", "cors"],
-    "python": ["flask", "requests"]
-  },
-  "configs": {
-    ".bashrc": "export PATH=$PATH:~/custom/bin",
-    ".gitconfig": "[user]\n\tname = John Doe\n\temail = john@example.com"
+  "isFirstSnapshot": true,
+  "files": {
+    "README.md": {
+      "size": 3397,
+      "lastModified": "2025-01-08T21:52:52.008Z",
+      "hash": "2dc8483bd1d2cb9f327b7749770627642d9671ed347cecf1679adf046e8aa957"
+    }
   }
 }
 ```
@@ -126,5 +122,3 @@ A file automatically generated during the `snap` process. Example:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
-
-

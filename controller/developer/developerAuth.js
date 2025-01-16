@@ -51,6 +51,8 @@ class DevAuth {
       try {
         const spinner = ora('Logging in...').start();
         const authManager = new AuthManager();
+        console.log(email)
+        console.log(password)
         await authManager.login(email, password);
         spinner.succeed(chalk.green("Login successful!"));
       } catch (error) {
