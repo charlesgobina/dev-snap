@@ -3,3 +3,4 @@ node_modules
 serviceAccountKey.json
 clientServiceAccount.js
 .devsnap
+fax.js
