@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import archiver from "archiver";
-import { bucket } from "../config/config.js";
+// import { bucket } from "../config/config.js";
 
 // Utility function to hash file content
 const hashFile = (filePath) => {
@@ -159,83 +159,18 @@ async function uploadAndGenerateSignedUrl(filePath) {
   }
 }
 
-// const uploadAndGenerateSignedUrl = async (userId, archivePath) => {
-//   try {
-//     const storagePath = `snap-archives/${userId}/${archivePath}`;
-//     console.log(`Uploading archive to ${storagePath}...`);
-
-//     const file = bucket.file(archivePath);
-
-//     // Upload file content (example content)
-//     await file.save("File data goes here", {
-//       contentType: "application/octet-stream",
-//     });
-
-//     console.log("File uploaded successfully.");
-
-//     // Check if the file exists
-//     const [exists] = await file.exists();
-//     if (!exists) {
-//       throw new Error("File does not exist in Firebase Storage.");
-//     }
-
-//     console.log("File exists. Generating signed URL...");
-
-//     const date = new Date();
-//     date.setDate(date.getDate() + 1); // Expires in 24 hours
-
-//     const [publicUrl] = await file.getSignedUrl({
-//       action: "read",
-//       expires: date,
-//     });
-
-//     console.log("Generated Signed URL:", publicUrl);
-//     return publicUrl;
-//   } catch (error) {
-//     console.error("Error:", error.message);
-//     throw error;
-//   }
-// };
-
-// const uploadArchive = async (archivePath, userId) => {
-//   let publicUrl = "";
-
-//   const date = new Date();
-
-//   try {
-
-//     const storagePath = `snap-archives/${userId}/${archivePath}`;
-//     const file = bucket.file(storagePath);
-//     const fileStream = file.createReadStream()
-//     fileStream.on('error', (err) => {
-//       console.log(err);
-//     });
-//     fileStream.on('finish', async () => {
-//       console.log('Upload complete. Url  in 24 hours.');
-
-//       publicUrl = await file.getSignedUrl({
-//         action: 'read',
-//         expires: date.setDate(date.getDate() + 1)
-//       })
-
-//     });
-
-//     console.log(`Uploading archive to ${storagePath}...`);
-//     console.log(publicUrl);
-
-//     return publicUrl;
-
-//   } catch (e) {
-//     console.log(e);
-//   }
-// };
-
 // function that returns zip file in a given directory
 const zipFileFinder = (dir) => {
   const files = fs.readdirSync(dir);
   const zipFiles = files.filter((file) => path.extname(file) === ".zip");
+
+  // rearrange the files in ascending order
+  zipFiles.sort((a, b) => {
+    return fs.statSync(path.join(dir, a)).mtime.getTime - fs.statSync(path.join(dir, b)).mtime.getTime;
+  })
   
   // return the first zip file found
+  print(zipFiles);
   return path.join(dir, zipFiles[0]);
 }
 

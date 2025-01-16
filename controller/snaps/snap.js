@@ -1,13 +1,26 @@
 import fs from "fs";
 import path from "path";
 import archiver from "archiver";
+import { AuthManager } from "../../services/authmanager.js";
+import app from "../../config/config.js";
+import ora from "ora";
+import chalk from "chalk";
 import { fileURLToPath } from "node:url";
 import {
   scanDirectory,
   getChangedFiles,
   createArchive,
   uploadAndGenerateSignedUrl,
+  zipFileFinder,
 } from "../../utils/fileManipulationHelper.js";
+
+import { 
+  getStorage, 
+  ref, 
+  uploadBytes,
+  getDownloadURL 
+} from 'firebase/storage';
+
 
 // Directory for DevSnap metadata
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +29,7 @@ const __rootDir = path.resolve(__dirname, "..", "..");
 const DEV_SNAP_DIR = path.join(__rootDir, ".devsnap");
 const METADATA_FILE = path.join(DEV_SNAP_DIR, "metadata.json");
 const SNAPSHOT_ARCHIVE = path.join(DEV_SNAP_DIR, `snapshot-${Date.now()}.zip`);
+const storage = getStorage(app);
 
 // Main function for the snap command
 class DevSnap {
@@ -23,10 +37,11 @@ class DevSnap {
     this.devSnapDir = DEV_SNAP_DIR;
     this.metadataFile = METADATA_FILE;
     this.snapshotArchive = SNAPSHOT_ARCHIVE;
+    this.authManager = new AuthManager();
   }
 
   async snap() {
-    console.log("Starting snapshot process...");
+    const snapperSpinner = ora('Snapping project...').start();
 
     // Check if DevSnap is initialized
     if (!fs.existsSync(this.metadataFile)) {
@@ -42,14 +57,13 @@ class DevSnap {
     );
     const { isFirstSnapshot, files: baselineFiles } = baselineMetadata;
 
-    console.log("Snapshot metadata loaded.");
     console.log(`Baseline snapshot: ${isFirstSnapshot ? "Yes" : "No"}`);
     console.log(`Files in baseline snapshot: ${Object.keys(baselineFiles).length}`);
-    console.log(baselineMetadata);
 
     // Scan current directory
     process.chdir(__rootDir);
-    console.log("Scanning root directory...");
+    // snapperSpinner.text(chalk.gray("Scanning project directory..."))
+
     const currentMetadata = scanDirectory(process.cwd());
 
     // Identify changed files
@@ -85,24 +99,50 @@ class DevSnap {
       JSON.stringify(baselineMetadata, null, 2)
     );
 
-    console.log("Snapshot process completed.");
+    snapperSpinner.succeed(chalk.green("Snapping completed"));
+
+    const fileUploadSpinner = ora("Saving snap...").start();
+    await this.uploadSnap();
+    fileUploadSpinner.stop();
   }
 
-  async uploadFile(req, res) {
+  async uploadSnap() {
+
+    const filepath = zipFileFinder(DEV_SNAP_DIR);
+    const currentUser = await this.authManager.getCurrentUser();
+
+    console.log(currentUser);
+
+    if (!currentUser) {
+      console.log(chalk.red('Please login first!'));
+      return;
+    }
+
+    const spinner = ora('Uploading file...').start();
 
     try {
-      console.log(req.body);
-      const { file } = req.body;
-      console.log(file);
-      const { userId } = "174fb4ae-0aae-4e15-a441-d03c6f0fd0f6";
+      // Read file
+      const file = fs.readFileSync(filepath);
+      const filename = filepath.split('/').pop();
+
+      // Create storage reference
+      const storageRef = ref(storage, `uploads/${currentUser.uid}/${filename}`);
+
+      // Upload file
+      await uploadBytes(storageRef, file);
       
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef, {
+        token: {
+          expires
+        }
+      });
 
-      await uploadAndGenerateSignedUrl(file, userId)
-
-    } catch (e) {}
-    
-
-      res.status(200).json({ message: "File uploaded successfully" });
+      spinner.succeed(chalk.green('File uploaded successfully!'));
+      console.log(chalk.blue('Download URL:'), downloadURL);
+    } catch (error) {
+      spinner.fail(chalk.red(`Upload failed: ${error.message}`));
+    }
 
   }
 

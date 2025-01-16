@@ -28,7 +28,7 @@ export class AuthManager {
       email: user.email,
       refreshToken: user.stsTokenManager.refreshToken,
       accessToken: user.stsTokenManager.accessToken,
-      expirationTime: user.stsTokenManager.expirationTime,
+      expirationTime: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
     try {
@@ -40,15 +40,15 @@ export class AuthManager {
 
   // Load auth data from file
   loadAuthData() {
+    let authData = null;
     try {
       if (fs.existsSync(AUTH_FILE)) {
-        const authData = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
-        return authData;
+        authData = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
       }
     } catch (error) {
       console.error(chalk.red('Failed to load auth data:', error.message));
     }
-    return null;
+    return authData;
   }
 
   // Check if token is expired
@@ -60,11 +60,13 @@ export class AuthManager {
 
   // Get current user with auto-refresh
   async getCurrentUser() {
+    console.log(this.auth.currentUser);
     if (this.currentUser) {
       return this.currentUser;
     }
 
     const authData = this.loadAuthData();
+    console.log(authData);
     if (!authData) {
       console.log(chalk.yellow('No cached credentials found. Please login using `devsnap login`'));
       return null;
@@ -76,21 +78,7 @@ export class AuthManager {
       return null;
     }
 
-    try {
-      // Wait for Firebase to initialize
-      await new Promise((resolve) => {
-        const unsubscribe = this.auth.onAuthStateChanged((user) => {
-          unsubscribe();
-          resolve();
-        });
-      });
-
-      this.currentUser = this.auth.currentUser;
-      return this.currentUser;
-    } catch (error) {
-      console.error(chalk.red('Failed to get current user:', error.message));
-      return null;
-    }
+    return authData;
   }
 
   // Clear auth data
