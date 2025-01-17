@@ -60,13 +60,11 @@ export class AuthManager {
 
   // Get current user with auto-refresh
   async getCurrentUser() {
-    console.log(this.auth.currentUser);
     if (this.currentUser) {
       return this.currentUser;
     }
 
     const authData = this.loadAuthData();
-    console.log(authData);
     if (!authData) {
       console.log(chalk.yellow('No cached credentials found. Please login using `devsnap login`'));
       return null;
