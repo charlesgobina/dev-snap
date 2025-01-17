@@ -29,7 +29,6 @@ const nodeDependecyGetter = () => {
       const packagePath = path.join(__rootDir, entry.name)
       const packagePathObj = JSON.parse(fs.readFileSync(packagePath, "utf-8"))
       packageJson = Object.keys(packagePathObj.dependencies)
-      console.log(packageJson);
     }
   }
 
@@ -38,14 +37,28 @@ const nodeDependecyGetter = () => {
   return nodepackage;
 }
 
+const pythonDependecyGetter = () => {
+  const pythonPackage = {
+    dependencies: [],
+    engine: ''
+  }
+  const entries = fs.readdirSync(__rootDir, { withFileTypes: true });
+  let requirements = null;
 
+  for (const entry of entries) {
+    if (entry.name == "requirements.txt") {
+      const packagePath = path.join(__rootDir, entry.name)
+      const packagePathObj = fs.readFileSync(packagePath, "utf-8")
+      requirements = packagePathObj.split('\n')
+    } else {
+      requirements = []
+    }
+  }
 
-
-
-// python dependency getter
-
-
-// go dependency getter
+  pythonPackage.dependencies = requirements
+  pythonPackage.engine = 'python'
+  return pythonPackage;
+}
 
 
 
