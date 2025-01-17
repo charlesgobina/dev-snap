@@ -170,7 +170,6 @@ const zipFileFinder = (dir) => {
   })
   
   // return the first zip file found
-  print(zipFiles);
   return path.join(dir, zipFiles[0]);
 }
 

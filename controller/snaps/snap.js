@@ -1,7 +1,10 @@
 import fs from "fs";
 import path from "path";
 import archiver from "archiver";
+import { nodeDependecyGetter } from "../../utils/dependencyGetter.js";
+import SnapService from "../../services/snapService.js";
 import { AuthManager } from "../../services/authmanager.js";
+import SnapModel from "../../model/snapModel.js";
 import app from "../../config/config.js";
 import ora from "ora";
 import chalk from "chalk";
@@ -80,12 +83,12 @@ class DevSnap {
     }
 
     if (filesToArchive.length === 0) {
-      console.log("No changes detected. Snapshot not created.");
+      console.log(chalk.yellow("No changes detected. Exiting..."));
       return;
     }
 
-    console.log(`Changes detected in ${filesToArchive.length} file(s):`);
-    filesToArchive.forEach((file) => console.log(`- ${file}`));
+    console.log(chalk.green(`Changes detected in ${filesToArchive.length} file(s):`));
+    filesToArchive.forEach((file) => console.log(chalk.green(`- ${file}`)));
 
     // Create a zip archive for changed files
     await createArchive(this.snapshotArchive, filesToArchive);
@@ -102,7 +105,27 @@ class DevSnap {
     snapperSpinner.succeed(chalk.green("Snapping completed"));
 
     const fileUploadSpinner = ora("Saving snap...").start();
-    await this.uploadSnap();
+    const archiveDownloadURL = await this.uploadSnap();
+
+    // write snap data to firestore
+    const dependency = nodeDependecyGetter()
+    const currentUser = await this.authManager.getCurrentUser();
+
+    const snapData = new SnapModel({
+      userId: currentUser.uid,
+      snapName: 'test',
+      workspaceArchive: archiveDownloadURL,
+      dependencyInfo: dependency.dependencies,
+      configFiles: {},
+      frameTime: dependency.engine,
+      snapSize: fs.statSync(this.snapshotArchive).size / 1024,
+      isLocked: false
+    })
+
+
+    await SnapService.createSnap(currentUser.uid, snapData.toJSON())
+
+
     fileUploadSpinner.stop();
   }
 
@@ -110,8 +133,6 @@ class DevSnap {
 
     const filepath = zipFileFinder(DEV_SNAP_DIR);
     const currentUser = await this.authManager.getCurrentUser();
-
-    console.log(currentUser);
 
     if (!currentUser) {
       console.log(chalk.red('Please login first!'));
@@ -132,14 +153,10 @@ class DevSnap {
       await uploadBytes(storageRef, file);
       
       // Get download URL
-      const downloadURL = await getDownloadURL(storageRef, {
-        token: {
-          expires
-        }
-      });
+      const downloadURL = await getDownloadURL(storageRef);
 
       spinner.succeed(chalk.green('File uploaded successfully!'));
-      console.log(chalk.blue('Download URL:'), downloadURL);
+      return downloadURL;
     } catch (error) {
       spinner.fail(chalk.red(`Upload failed: ${error.message}`));
     }

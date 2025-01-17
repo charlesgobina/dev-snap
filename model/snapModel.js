@@ -2,16 +2,26 @@ import { v4 as uuidv4 } from "uuid";
 import Joi from "joi";
 
 class SnapModel {
-  constructor() {
-    this.userId = uuidv4();
-    this.snapName = "";
-    this.createdAt = new Date().toISOString();
-    this.workspaceArchive = "";
-    this.dependencyInfo = {};
-    this.configFiles = {};
-    this.frameTime = ""
-    this.snapSize = 0;
-    this.isLocked = false;
+  constructor({
+    userId="",
+    snapName,
+    createdAt=new Date().toISOString(),
+    workspaceArchive="",
+    dependencyInfo={},
+    configFiles={},
+    frameTime="",
+    snapSize=0,
+    isLocked=false
+  }) {
+    this.userId = userId;
+    this.snapName = snapName;
+    this.createdAt = createdAt;
+    this.workspaceArchive = workspaceArchive;
+    this.dependencyInfo = dependencyInfo;
+    this.configFiles = configFiles;
+    this.frameTime = frameTime
+    this.snapSize = snapSize;
+    this.isLocked = isLocked;
   }
 
   toJSON() {
@@ -64,3 +74,5 @@ class SnapModel {
     return this.updateSnapSchema.validate(data, { abortEarly: false });
   }
 }
+
+export default SnapModel;
